@@ -60,6 +60,15 @@ class Data(APIView):
   
 class todolist(APIView):
   def post(self,request):
+    
+    if request.data.get('action') == 'create':
+      return self.create_task(request)
+    elif request.data.get('filter') == 'filter':
+      return self.filter_task(request)
+    else:
+      return Response("invalid action please enter the correct action create for creaing and filter for filtering")
+    
+  def create_task(self,request):
     title=request.data['title']
     description=request.data['description']
     status= True if request.data['status'] == 'true' else False
@@ -68,6 +77,24 @@ class todolist(APIView):
     data.save()
     
     return JsonResponse('Task added to the to do list success fully')
+  
+  def filter_task(self,request):
+    status=request.data['status']
+    print(status)
+    if status == 'success':
+      data=ToDOList.objects.filter(status=True)
+      print(data)
+      Serializer=ToDoListSerializer(data, many=True)
+      return Response({
+        'filtered data':Serializer.data
+      })       
+    else:
+      data=ToDOList.objects.filter(status=False)
+      print(data)
+      Serializer=ToDoListSerializer(data, many=True)
+      return Response({
+        'filtered data':Serializer.data
+      })
   
   def get(self,request):
     data=ToDOList.objects.all()
@@ -97,4 +124,3 @@ class todolist(APIView):
     data.delete()
     
     return Response("task has been deleted seccess fully")
-    
