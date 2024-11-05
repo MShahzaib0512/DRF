@@ -8,6 +8,7 @@ from .serializer import *
 from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth.models import User
 
+"""Some Basic Tasks Using DRF"""
 # Create your views here.
 @api_view(['GET' , 'POST'])
 @permission_classes([AllowAny])
@@ -124,3 +125,62 @@ class todolist(APIView):
     data.delete()
     
     return Response("task has been deleted seccess fully")
+
+class ContactManager(APIView):
+  def post(self , request):
+    
+    if request.data.get("action")=='Create':
+      return self.create_contact(request)
+    elif request.data.get('action')=='filter':
+      return self.filter_contact(request)
+    else:
+      return Response("invalid action defined")
+    
+  def create_contact(self,request):
+    
+    name1=request.data['name']
+    phone=request.data['phone']
+    email=request.data['email']
+    
+    data=ContactManagement.objects.create(name=name1,phone=phone,email=email)
+    data.save()
+    
+    return Response("Contect added success fully!")
+  
+  def filter_contact(self,request):
+    data=ContactManagement.objects.filter(name=request.data['name'])
+    Serilaizer=ContactManagementSerializer(data,many=True)
+    return Response({
+      "Filtered data":Serilaizer.data
+    })
+    
+  def get(self,request):
+    data=ContactManagement.objects.all()
+    paginator=PageNumberPagination()
+    paginated_data=paginator.paginate_queryset(data,request)
+    Serializer=ContactManagementSerializer(paginated_data,many=True)
+        
+    return paginator.get_paginated_response(Serializer.data)
+    
+  def patch(self,request):
+    object=ContactManagement.objects.get(id=request.data['id'])
+    object.name=request.data['name']
+    object.phone=request.data['phone']
+    object.email=request.data['email']
+    object.save()
+    
+    num=str(object.phone)
+    
+    return JsonResponse({
+      "Data has been updated successfully":"Congrats",
+      "id":object.id,
+      "name":object.name,
+      "phone":num,
+      "email":object.email,
+    })
+    
+  def delete(self,request):
+    data=ContactManagement.objects.get(id=request.data['id'])
+    data.delete()
+    
+    return Response("Contact deleted sccessfully")
