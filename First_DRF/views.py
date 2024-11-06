@@ -7,6 +7,15 @@ from .models import *
 from .serializer import *
 from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth.models import User
+from rest_framework import status
+
+#reset password imports
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.urls import reverse
+from django.conf import settings 
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
+
 
 """Some Basic Tasks Using DRF"""
 # Create your views here.
@@ -184,3 +193,52 @@ class ContactManager(APIView):
     data.delete()
     
     return Response("Contact deleted sccessfully")
+@permission_classes([AllowAny])  
+class frogetpassword(APIView):
+  
+    def post(self,request):
+      Serializer=PasswordResetRequestSerializer(data=request.data)
+      try:
+        if Serializer.is_valid():
+            email = Serializer.validated_data['email']
+            print(email)
+            user = User.objects.get(email=email)
+            token = PasswordResetTokenGenerator().make_token(user)
+            
+            reset_url = request.build_absolute_uri(
+                reverse('password-reset-confirm', kwargs={'token': token, 'uid': user.id})
+            )
+            
+            subject = "Password reset link requested"
+            message = (f"Click on the link below if you requested a password reset. "
+                      f"Otherwise, you can ignore this email: {reset_url}")
+            from_mail = settings.EMAIL_HOST_USER
+            to_mail = [user.email]
+            
+            send_mail(subject, message, from_mail, to_mail, fail_silently=False)
+            return Response("Password reset link was successfully sent to your email address. Check your email to reset your password.")
+      except Exception as e:
+          print(f"Error sending email: {e}")  # Debugging output
+          return Response("Invalid email address provided or error in sending email.")
+        
+@permission_classes([AllowAny])
+class PasswordResetConfirm(APIView):
+  
+    def post(self, request, token, uid):
+        user = get_object_or_404(User, id=uid)
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            return Response(
+                {"error": "Token has expired or is invalid. Please request a new one."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=user)
+            return Response(
+                {"message": "Password has been updated successfully"},
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            {"error": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )

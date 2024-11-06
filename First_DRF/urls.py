@@ -6,4 +6,7 @@ urlpatterns = [
     path('data', Data.as_view(), name="data"),
     path('todolist', todolist.as_view(), name="todolist"),
     path('ContactManager', ContactManager.as_view(), name="ContactManager"),
+    
+    path('password-reset-link',frogetpassword.as_view(),name='password-reset-link'),
+    path('password-reset-confirm/<str:token>/<int:uid>/', PasswordResetConfirm.as_view(), name='password-reset-confirm'),
 ]
