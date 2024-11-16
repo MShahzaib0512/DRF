@@ -15,6 +15,7 @@ from django.urls import reverse
 from django.conf import settings 
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from rest_framework.authtoken.models import Token
 
 
 """Some Basic Tasks Using DRF"""
@@ -45,6 +46,28 @@ def item(request):
   data1="Error creating the user please try again later"
  return Response(data1) 
 
+class Item(APIView):
+  def post(self, request):
+    user_object=ItemSerializer(data=request.data)
+    
+    if not user_object.is_valid():
+      return Response({ 'error': user_object.errors , 'message':'error craeating user !'})
+    user_object.save()
+    
+    """TO CREATE SESSION WEB TOKENS WE USE MESTHOD BELOW"""
+    
+    # user = user_object.save()
+    # myuser=User.objects.get(id=user.id)
+    # user_token , _ =Token.objects.get_or_create(user=user)
+    
+    
+    return Response({
+      "status": 200,
+      "message":"user craeted sucessfully",
+      'payload':user_object.data,
+      # "user_session_token":str(user_token)
+    })
+
 class Data(APIView):
   
   def post(self,request):
@@ -54,15 +77,23 @@ class Data(APIView):
     return Response("Notes added seccess fully!")
   def get(self,request):
     data=Notes.objects.all()
+    print(data)
     Serializer=NotesSerializer(data, many=True)
+    print(type(Serializer.data))
     return Response({
-      'return data': Serializer.data
+      'return data':Serializer.data
     })
   def put(self,request):
-    data=Notes.objects.get(id=request.data['id'])
-    data.description=request.data['description']
-    data.save()
-    return Response('data updated success fully')
+    object=Notes.objects.get(id=request.data['id'])
+    object_data=NotesSerializer(object, data=request.data)
+    if not object_data.is_valid():
+      return Response({'status':403, "message":"An occured during data updating","error":object_data.errors})
+    object_data.save()
+    return Response({
+      "status":200,
+      "message":"data updated successfully",
+      "payload" : object_data.data      
+    })
   def delete(self , request):
     data=Notes.objects.get(id=request.data['id'])
     data.delete()
@@ -117,16 +148,16 @@ class todolist(APIView):
     
   def patch(self,request):
     object=ToDOList.objects.get(id=request.data['id'])
-    object.title=request.data['title']
-    object.description=request.data['description']
-    object.status=request.data['status']
-    object.save()
+    
+    object_data= ToDoListSerializer(object, data = request.data , partial =True)
+    if not object_data.is_valid():
+      return Response({'status':"403", "message":"An error occured while updating !", "error" : object_data.errors})
+    object_data.save()
+    
     return JsonResponse({
+      'status':200,
       'Response':'Data has been updated success fully',
-      'id':object.id,
-      'title':object.title,
-      'description':object.description,
-      'status':object.status,
+      'payload':object_data.data
     })
   
   def delete(self,request):
@@ -171,21 +202,17 @@ class ContactManager(APIView):
         
     return paginator.get_paginated_response(Serializer.data)
     
-  def patch(self,request):
+  def put(self,request):
     object=ContactManagement.objects.get(id=request.data['id'])
-    object.name=request.data['name']
-    object.phone=request.data['phone']
-    object.email=request.data['email']
-    object.save()
-    
-    num=str(object.phone)
+    ser_data=ContactManagementSerializer(object ,data=request.data ,partial=True )
+    if not ser_data.is_valid():
+      return Response({'message':"An error occured!", "error":ser_data.errors})
+    ser_data.save()
+    payload=ser_data.data 
     
     return JsonResponse({
       "Data has been updated successfully":"Congrats",
-      "id":object.id,
-      "name":object.name,
-      "phone":num,
-      "email":object.email,
+      "payload":payload
     })
     
   def delete(self,request):
@@ -219,8 +246,7 @@ class frogetpassword(APIView):
             return Response("Password reset link was successfully sent to your email address. Check your email to reset your password.")
       except Exception as e:
           print(f"Error sending email: {e}")  # Debugging output
-          return Response("Invalid email address provided or error in sending email.")
-        
+          return Response("Invalid email address provided or error in sending email.")       
 @permission_classes([AllowAny])
 class PasswordResetConfirm(APIView):
   
@@ -242,3 +268,4 @@ class PasswordResetConfirm(APIView):
             {"error": serializer.errors},
             status=status.HTTP_400_BAD_REQUEST
         )
+        

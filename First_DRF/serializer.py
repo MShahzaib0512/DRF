@@ -3,6 +3,18 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 """ Notes API with crud operations  """
+class ItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password','first_name','last_name' ]
+        extra_kwargs = {'password': {'write_only': True}}  # Ensure password is write-only
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        if not user.id:
+          raise serializers.ValidationError("User ID not created")
+        return user
+
 class NotesSerializer(serializers.ModelSerializer):
  
  class Meta:

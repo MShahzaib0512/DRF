@@ -2,11 +2,12 @@ from django.urls import path ,include
 from .views import *
 
 urlpatterns = [
-    path('item', item, name="item"),
-    path('data', Data.as_view(), name="data"),
-    path('todolist', todolist.as_view(), name="todolist"),
-    path('ContactManager', ContactManager.as_view(), name="ContactManager"),
+    path('item', item),
+    path('data', Data.as_view()),
+    path('todolist', todolist.as_view()),
+    path('ContactManager', ContactManager.as_view()),
+    path('Item', Item.as_view()),
     
-    path('password-reset-link',frogetpassword.as_view(),name='password-reset-link'),
-    path('password-reset-confirm/<str:token>/<int:uid>/', PasswordResetConfirm.as_view(), name='password-reset-confirm'),
+    path('password-reset-link',frogetpassword.as_view()),
+    path('password-reset-confirm/<str:token>/<int:uid>/', PasswordResetConfirm.as_view()),
 ]
