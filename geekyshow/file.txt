@@ -1,0 +1,13 @@
+permissions in DRF
+
+AllowAny = allow all users weather is authenticated or not to access api
+
+IsAuthenticated = allow only authenticated users to access api
+
+IsAdminUser = allow only admin to access the api
+
+IsAuthenticatedOrReadOnly = allow authenticatde to access the api and non authenticated users to acces only safe methods as get , options etc
+
+DjangoModelPermissions = it allow user for get data after the authentication but not to add delete update the user if we want to allow the user for the particular permissions so we ahve to initially allow the user for this permissions through django admin where we allow the user for the api | allow to change , update , delete the user and then he is able to change the data also of the models as users
+
+DjangoModelPermissionsOrAnonReadOnly = allow unsuthenticated to read data only and after authentication he can also perform tasks that are elegible for that particullar user as if the user is applicable of only post data so after authentication he can also post and get data only not update and delete if the user have permission allowed for the admin

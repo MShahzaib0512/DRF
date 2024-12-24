@@ -1,0 +1,16 @@
+custome permissions
+
+in this we have to create a seprate permissions file in which we define the permissions and then use te=hem in the view file where it is needed 
+ from rest_framework.permissions import base perimssions 
+ claa mypermissions(baseprmissions):
+  def has_permission/has_object_permission(self , request , view):
+   define the logoc restrictions you want to allow permissions and retyrn true if oka and false for restrictions when we use thois permissions we also have to manage all the logics beacuse it not allow any user for the access however it is authenticated or not  as we can also use object level permissions when e.g. only the person who ahve posted the blog can edit the blog others not herewe use them or many logics as you want
+
+functions based permissions how to use them we will applya and stydy them 
+
+
+  api_classes("POST","GET"..etc)
+  authentication_classes(baseauthentication)
+  permission_calsses(isAuthenticated)         here the method to use permissions in function based views
+  def anuFunction(request):
+  .. body of th functions
